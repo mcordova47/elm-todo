@@ -1,8 +1,8 @@
 module Main exposing (..)
 
 import Html exposing (Html)
-import Html.Attributes exposing (value, class)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Attributes exposing (value, class, classList)
+import Html.Events exposing (onInput, onSubmit, onClick)
 
 
 -- MODEL
@@ -37,6 +37,7 @@ type Msg
     = NoOp
     | ChangeDraft String
     | AddTodo
+    | CompleteTodo Todo
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -44,14 +45,30 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
         ChangeDraft draft ->
             ( { model | draftTodo = draft }, Cmd.none )
+
         AddTodo ->
             ( { model
               | todoList = (Todo model.draftTodo False) :: model.todoList
               , draftTodo = ""
               }
             , Cmd.none )
+
+        CompleteTodo todo ->
+            let todoList =
+                List.map (toggleChecked todo) model.todoList
+            in
+                ( { model | todoList = todoList }
+                , Cmd.none)
+
+
+toggleChecked todo toToggle =
+    if todo == toToggle then
+        { toToggle | isCompleted = not toToggle.isCompleted }
+    else
+        toToggle
 
 
 
@@ -89,7 +106,48 @@ todoList =
 
 todoItem : Todo -> Html Msg
 todoItem todo =
-    Html.div [] [ Html.text todo.label ]
+    Html.div
+        [ todoItemClass todo
+        ]
+        [ checkbox (CompleteTodo todo) todo.isCompleted
+        , Html.div
+              [ class "todo-item__label"
+              ]
+              [ Html.text todo.label ]
+        ]
+
+
+todoItemClass : Todo -> Html.Attribute Msg
+todoItemClass todo =
+    classList
+        [ ("todo-item", True)
+        , ("todo-item--completed", todo.isCompleted)
+        ]
+
+
+checkbox : msg -> Bool -> Html msg
+checkbox msg checked =
+    let kind =
+        if checked then
+            "check_box"
+        else
+            "check_box_outline_blank"
+    in
+        Html.div
+            [ class "todo-item__checkbox"
+            , onClick msg
+            ] <|
+            [ materialIcon kind
+            ]
+
+
+materialIcon : String -> Html msg
+materialIcon kind =
+    Html.i
+        [ class "material-icons"
+        ]
+        [ Html.text kind
+        ]
 
 
 -- SUBSCRIPTIONS
