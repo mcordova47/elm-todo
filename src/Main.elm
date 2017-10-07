@@ -58,17 +58,18 @@ update msg model =
 
         CompleteTodo todo ->
             let todoList =
-                List.map (toggleChecked todo) model.todoList
+                List.map (toggleCheckedWhen ((==) todo)) model.todoList
             in
                 ( { model | todoList = todoList }
                 , Cmd.none)
 
 
-toggleChecked todo toToggle =
-    if todo == toToggle then
-        { toToggle | isCompleted = not toToggle.isCompleted }
+toggleCheckedWhen : (Todo -> Bool) ->  Todo -> Todo
+toggleCheckedWhen p todo =
+    if p todo then
+        { todo | isCompleted = not todo.isCompleted }
     else
-        toToggle
+        todo
 
 
 
