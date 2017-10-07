@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (Html)
-import Html.Attributes exposing (value)
+import Html.Attributes exposing (value, class)
 import Html.Events exposing (onInput, onSubmit)
 
 
@@ -60,7 +60,9 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.div []
+    Html.div
+        [ class "todo-list-container"
+        ]
         [ draftTodo model.draftTodo
         , todoList model.todoList
         ]
@@ -70,6 +72,7 @@ draftTodo : String -> Html Msg
 draftTodo val =
     Html.form
         [ onSubmit AddTodo
+        , class "draft-todo"
         ]
         [ Html.input
               [ value val

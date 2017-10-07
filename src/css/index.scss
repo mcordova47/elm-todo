@@ -1,1 +1,23 @@
 /* Root styles can go here */
+@import 'variables';
+@import url('https://fonts.googleapis.com/css?family=Roboto|Roboto+Slab');
+
+body, input, textarea, select, button {
+  color: $font-color;
+  font-family: $font-family;
+  font-size: 24px;
+}
+
+.todo-list-container {
+  width: 250px;
+  margin: auto;
+}
+
+.draft-todo input {
+  border-width: 0 0 3px;
+}
+
+.draft-todo input:focus {
+  outline: none;
+  border-color: $primary-color;
+}

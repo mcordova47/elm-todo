@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "webpack -p",
-    "start": "webpack-dev-server --port 3000 --hot",
+    "start": "webpack-dev-server --port 3001 --hot",
     "deploy": "npm run build && gh-pages --dist dist"
   },
   "dependencies": {
