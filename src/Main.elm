@@ -11,12 +11,14 @@ import Html.Events exposing (onInput, onSubmit, onClick)
 type alias Model =
     { draftTodo : String
     , todoList : List Todo
+    , todoNumber : Int
     }
 
 
 type alias Todo =
     { label : String
     , isCompleted : Bool
+    , id : Int
     }
 
 
@@ -24,6 +26,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { draftTodo = ""
       , todoList = []
+      , todoNumber = 0
       }
     , Cmd.none
     )
@@ -50,15 +53,18 @@ update msg model =
             ( { model | draftTodo = draft }, Cmd.none )
 
         AddTodo ->
-            ( { model
-              | todoList = (Todo model.draftTodo False) :: model.todoList
-              , draftTodo = ""
-              }
-            , Cmd.none )
+            let todoNumber = model.todoNumber + 1
+            in
+                ( { model
+                  | todoList = (Todo model.draftTodo False todoNumber) :: model.todoList
+                  , draftTodo = ""
+                  , todoNumber = todoNumber
+                  }
+                , Cmd.none )
 
         CompleteTodo todo ->
             let todoList =
-                List.map (toggleCheckedWhen ((==) todo)) model.todoList
+                List.map (toggleCheckedWhen ((==) todo.id << .id)) model.todoList
             in
                 ( { model | todoList = todoList }
                 , Cmd.none)
@@ -70,7 +76,6 @@ toggleCheckedWhen p todo =
         { todo | isCompleted = not todo.isCompleted }
     else
         todo
-
 
 
 -- VIEW
