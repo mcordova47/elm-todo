@@ -70,7 +70,10 @@ update msg model =
         CompleteTodo todo ->
             let
                 todoList =
-                    List.map (toggleCheckedWhen ((==) todo.id << .id)) model.todoList
+                    model.todoList
+                        |> List.map (toggleCheckedWhen ((==) todo.id << .id))
+                        |> List.sortWith compareTodos
+
             in
                 ( { model | todoList = todoList }
                 , Cmd.none
@@ -84,6 +87,15 @@ toggleCheckedWhen p todo =
     else
         todo
 
+
+compareTodos : Todo -> Todo -> Order
+compareTodos a b =
+    case a.isCompleted of
+        True ->
+            if b.isCompleted then EQ else GT
+
+        False ->
+            if b.isCompleted then LT else EQ
 
 
 -- VIEW
