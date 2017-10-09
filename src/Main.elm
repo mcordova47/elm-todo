@@ -90,12 +90,18 @@ toggleCheckedWhen p todo =
 
 compareTodos : Todo -> Todo -> Order
 compareTodos a b =
-    case a.isCompleted of
-        True ->
-            if b.isCompleted then EQ else GT
+    case (a.isCompleted, b.isCompleted) of
+        (True, True) ->
+            EQ
 
-        False ->
-            if b.isCompleted then LT else EQ
+        (False, False) ->
+            EQ
+
+        (True, False) ->
+            GT
+
+        (False, True) ->
+            LT
 
 
 -- VIEW
