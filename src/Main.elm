@@ -3,8 +3,8 @@ port module Main exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (value, class, classList)
 import Html.Events exposing (onInput, onSubmit, onClick)
-import Json.Decode as Decode
-import Json.Decode.Pipeline exposing (decode, required)
+import Result exposing (withDefault)
+import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Model exposing (Todo)
 
@@ -75,28 +75,12 @@ update msg model =
                 )
 
         RetrieveCache value ->
-            ( { model | todoList = decodeTodoList value }
-            , Cmd.none
-            )
-
-
-decodeTodoList value =
-    case (Decode.decodeString todoListDecoder value) of
-        Ok todoList ->
-            todoList
-        Err _ ->
-            []
-
-
-todoListDecoder =
-    Decode.list todoDecoder
-
-
-todoDecoder =
-    decode Todo
-        |> required "label" Decode.string
-        |> required "isCompleted" Decode.bool
-        |> required "id" Decode.int
+            let
+                todoList = decode value |> withDefault []
+            in
+                ( { model | todoList = todoList }
+                , Cmd.none
+                )
 
 
 toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
