@@ -3,9 +3,10 @@ port module Main exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (value, class, classList)
 import Html.Events exposing (onInput, onSubmit, onClick)
-import Json.Encode as Encode
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (decode, required)
+import TodoList.Encode exposing (encode)
+import TodoList.Model exposing (Todo)
 
 
 -- MODEL
@@ -15,13 +16,6 @@ type alias Model =
     { draftTodo : String
     , todoList : List Todo
     , todoNumber : Int
-    }
-
-
-type alias Todo =
-    { label : String
-    , isCompleted : Bool
-    , id : Int
     }
 
 
@@ -65,7 +59,7 @@ update msg model =
                     , draftTodo = ""
                     , todoNumber = todoNumber
                   }
-                , cache (Encode.encode 0 (todoListToJson todoList))
+                , cache (encode todoList)
                 )
 
         CompleteTodo todo ->
@@ -77,7 +71,7 @@ update msg model =
 
             in
                 ( { model | todoList = todoList }
-                , cache (Encode.encode 0 (todoListToJson todoList))
+                , cache (encode todoList)
                 )
 
         RetrieveCache value ->
@@ -103,22 +97,6 @@ todoDecoder =
         |> required "label" Decode.string
         |> required "isCompleted" Decode.bool
         |> required "id" Decode.int
-
-
-todoToJson : Todo -> Encode.Value
-todoToJson todo =
-    Encode.object
-        [ ("label", Encode.string todo.label)
-        , ("isCompleted", Encode.bool todo.isCompleted)
-        , ("id", Encode.int todo.id)
-        ]
-
-
-todoListToJson : List Todo -> Encode.Value
-todoListToJson todoList =
-    todoList
-        |> List.map todoToJson
-        |> Encode.list
 
 
 toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
