@@ -1,8 +1,11 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Html exposing (Html)
 import Html.Attributes exposing (value, class, classList)
 import Html.Events exposing (onInput, onSubmit, onClick)
+import Json.Encode as Encode
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (decode, required)
 
 
 -- MODEL
@@ -37,18 +40,15 @@ init =
 
 
 type Msg
-    = NoOp
-    | ChangeDraft String
+    = ChangeDraft String
     | AddTodo
     | CompleteTodo Todo
+    | RetrieveCache String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         ChangeDraft draft ->
             ( { model | draftTodo = draft }
             , Cmd.none
@@ -58,13 +58,14 @@ update msg model =
             let
                 todoNumber =
                     model.todoNumber + 1
+                todoList = (Todo model.draftTodo False todoNumber) :: model.todoList
             in
                 ( { model
-                    | todoList = (Todo model.draftTodo False todoNumber) :: model.todoList
+                    | todoList = todoList
                     , draftTodo = ""
                     , todoNumber = todoNumber
                   }
-                , Cmd.none
+                , cache (Encode.encode 0 (todoListToJson todoList))
                 )
 
         CompleteTodo todo ->
@@ -76,8 +77,48 @@ update msg model =
 
             in
                 ( { model | todoList = todoList }
-                , Cmd.none
+                , cache (Encode.encode 0 (todoListToJson todoList))
                 )
+
+        RetrieveCache value ->
+            ( { model | todoList = decodeTodoList value }
+            , Cmd.none
+            )
+
+
+decodeTodoList value =
+    case (Decode.decodeString todoListDecoder value) of
+        Ok todoList ->
+            todoList
+        Err _ ->
+            []
+
+
+todoListDecoder =
+    Decode.list todoDecoder
+
+
+todoDecoder =
+    decode Todo
+        |> required "label" Decode.string
+        |> required "isCompleted" Decode.bool
+        |> required "id" Decode.int
+
+
+todoToJson : Todo -> Encode.Value
+todoToJson todo =
+    Encode.object
+        [ ("label", Encode.string todo.label)
+        , ("isCompleted", Encode.bool todo.isCompleted)
+        , ("id", Encode.int todo.id)
+        ]
+
+
+todoListToJson : List Todo -> Encode.Value
+todoListToJson todoList =
+    todoList
+        |> List.map todoToJson
+        |> Encode.list
 
 
 toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
@@ -102,6 +143,9 @@ compareTodos a b =
 
         (False, True) ->
             LT
+
+
+port cache : String -> Cmd msg
 
 
 -- VIEW
@@ -180,10 +224,12 @@ materialIcon kind =
 
 -- SUBSCRIPTIONS
 
+port retrieve : (String -> msg) -> Sub msg
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    retrieve RetrieveCache
 
 
 main : Program Never Model Msg
