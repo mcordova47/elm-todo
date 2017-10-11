@@ -10,8 +10,11 @@ body, input, textarea, select, button {
 }
 
 .todo-list-container {
-  width: 250px;
+  width: 305px;
   margin: auto;
+  box-shadow: -1px 1px 6px 1px rgba(0, 0, 0, 0.12);
+  padding: 15px;
+  border-radius: 2px;
 }
 
 .draft-todo input {
