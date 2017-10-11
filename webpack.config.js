@@ -11,6 +11,10 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const TARGET_ENV =
   process.env.npm_lifecycle_event === 'build' ? 'production' : 'development'
 
+const elmWebpackLoader = TARGET_ENV == 'development'
+  ? 'elm-webpack-loader?verbose=true&warn=true&debug=true'
+  : 'elm-webpack-loader?verbose=true&warn=true'
+
 const common = {
   entry: {
     app: ['./src/index.js']
@@ -50,7 +54,7 @@ const common = {
       {
         test: /\.elm$/,
         exclude: [/elm-stuff/, /node_modules/],
-        use: ['elm-hot-loader', 'elm-webpack-loader?verbose=true&warn=true']
+        use: ['elm-hot-loader', elmWebpackLoader]
       },
       {
         test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
