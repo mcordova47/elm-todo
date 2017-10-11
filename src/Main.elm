@@ -43,23 +43,22 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangeDraft draft ->
-            ( { model | draftTodo = draft }
-            , Cmd.none
-            )
+            { model | draftTodo = draft } ! []
 
         AddTodo ->
             let
                 todoNumber =
                     model.todoNumber + 1
-                todoList = (Todo model.draftTodo False todoNumber) :: model.todoList
+
+                todoList =
+                    (Todo model.draftTodo False todoNumber) :: model.todoList
             in
-                ( { model
+                { model
                     | todoList = todoList
                     , draftTodo = ""
                     , todoNumber = todoNumber
-                  }
-                , cache (encode todoList)
-                )
+                }
+                    ! [ cache (encode todoList) ]
 
         CompleteTodo todo ->
             let
@@ -67,27 +66,25 @@ update msg model =
                     model.todoList
                         |> List.map (toggleCheckedWhen ((==) todo.id << .id))
                         |> List.sortWith compareTodos
-
             in
-                ( { model | todoList = todoList }
-                , cache (encode todoList)
-                )
+                { model | todoList = todoList }
+                    ! [ cache (encode todoList) ]
 
         RetrieveCache value ->
             let
                 todoList =
                     decode value
                         |> Result.withDefault []
+
                 todoNumber =
                     List.maximum (List.map .id todoList)
                         |> Maybe.withDefault 0
             in
-                ( { model
+                { model
                     | todoList = todoList
                     , todoNumber = todoNumber
-                  }
-                , Cmd.none
-                )
+                }
+                    ! []
 
 
 toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
@@ -100,21 +97,22 @@ toggleCheckedWhen p todo =
 
 compareTodos : Todo -> Todo -> Order
 compareTodos a b =
-    case (a.isCompleted, b.isCompleted) of
-        (True, True) ->
+    case ( a.isCompleted, b.isCompleted ) of
+        ( True, True ) ->
             EQ
 
-        (False, False) ->
+        ( False, False ) ->
             EQ
 
-        (True, False) ->
+        ( True, False ) ->
             GT
 
-        (False, True) ->
+        ( False, True ) ->
             LT
 
 
 port cache : String -> Cmd msg
+
 
 
 -- VIEW
@@ -192,6 +190,7 @@ materialIcon kind =
 
 
 -- SUBSCRIPTIONS
+
 
 port retrieve : (String -> msg) -> Sub msg
 
