@@ -3,6 +3,7 @@ port module Main exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (value, class, classList, placeholder)
 import Html.Events exposing (onInput, onSubmit, onClick)
+import Json.Encode exposing (Value)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Model exposing (Todo)
@@ -36,7 +37,7 @@ type Msg
     = ChangeDraft String
     | AddTodo
     | CompleteTodo Todo
-    | RetrieveCache String
+    | RetrieveCache Value
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -193,7 +194,7 @@ materialIcon kind =
 -- SUBSCRIPTIONS
 
 
-port retrieve : (String -> msg) -> Sub msg
+port retrieve : (Value -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
