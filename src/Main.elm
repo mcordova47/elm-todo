@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Html exposing (Html)
-import Html.Attributes exposing (value, class, classList)
+import Html.Attributes exposing (value, class, classList, placeholder)
 import Html.Events exposing (onInput, onSubmit, onClick)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
@@ -135,6 +135,7 @@ draftTodo val =
         ]
         [ Html.input
             [ value val
+            , placeholder "Enter a Task"
             , onInput ChangeDraft
             ]
             []
