@@ -3,7 +3,6 @@ port module Main exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (value, class, classList)
 import Html.Events exposing (onInput, onSubmit, onClick)
-import Result exposing (withDefault)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Model exposing (Todo)
@@ -76,9 +75,17 @@ update msg model =
 
         RetrieveCache value ->
             let
-                todoList = decode value |> withDefault []
+                todoList =
+                    decode value
+                        |> Result.withDefault []
+                todoNumber =
+                    List.maximum (List.map .id todoList)
+                        |> Maybe.withDefault 0
             in
-                ( { model | todoList = todoList }
+                ( { model
+                    | todoList = todoList
+                    , todoNumber = todoNumber
+                  }
                 , Cmd.none
                 )
 
