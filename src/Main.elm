@@ -7,6 +7,7 @@ import Json.Encode exposing (Value)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Model exposing (Todo)
+import ListControls
 
 
 -- MODEL
@@ -38,6 +39,8 @@ type Msg
     | AddTodo
     | CompleteTodo Todo
     | RetrieveCache Value
+    | ClearCompleted
+    | ClearAll
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -87,6 +90,18 @@ update msg model =
                 }
                     ! []
 
+        ClearCompleted ->
+            let
+                todoList =
+                    List.filter (not << .isCompleted) model.todoList
+            in
+                { model | todoList = todoList }
+                    ! [ cache (encode todoList) ]
+
+        ClearAll ->
+            { model | todoList = [] }
+                ! [ cache (encode []) ]
+
 
 toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
 toggleCheckedWhen p todo =
@@ -125,7 +140,39 @@ view model =
         [ class "todo-list-container" ]
         [ draftTodo model.draftTodo
         , todoList model.todoList
+        , controlPanel model.todoList
         ]
+
+
+controlPanel : List Todo -> Html Msg
+controlPanel todoList =
+    Html.div
+        [ class "control-panel" ]
+        (controls todoList)
+
+
+controls : List Todo -> List (Html Msg)
+controls todoList =
+    let
+        clearAll =
+            ListControls.deleteAll ClearAll
+                |> onlyIf (not (List.isEmpty todoList))
+        clearCompleted =
+            ListControls.delete ClearCompleted
+                |> onlyIf (List.any .isCompleted todoList)
+    in
+        List.filterMap identity
+            [ clearAll
+            , clearCompleted
+            ]
+
+
+onlyIf : Bool -> a -> Maybe a
+onlyIf pred x =
+    if pred then
+        Just x
+    else
+        Nothing
 
 
 draftTodo : String -> Html Msg
@@ -152,7 +199,7 @@ todoItem : Todo -> Html Msg
 todoItem todo =
     Html.div
         [ todoItemClass todo ]
-        [ checkbox (CompleteTodo todo) todo.isCompleted
+        [ ListControls.checkbox (CompleteTodo todo) todo.isCompleted
         , Html.div
             [ class "todo-item__label" ]
             [ Html.text todo.label ]
@@ -165,29 +212,6 @@ todoItemClass todo =
         [ ( "todo-item", True )
         , ( "todo-item--completed", todo.isCompleted )
         ]
-
-
-checkbox : msg -> Bool -> Html msg
-checkbox msg checked =
-    let
-        kind =
-            if checked then
-                "check_box"
-            else
-                "check_box_outline_blank"
-    in
-        Html.div
-            [ class "todo-item__checkbox"
-            , onClick msg
-            ]
-            [ materialIcon kind ]
-
-
-materialIcon : String -> Html msg
-materialIcon kind =
-    Html.i
-        [ class "material-icons" ]
-        [ Html.text kind ]
 
 
 
