@@ -6,9 +6,9 @@ import Html.Events exposing (onInput, onSubmit, onClick)
 import Json.Encode exposing (Value)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
-import TodoList.Data as Data exposing (Todo, toggleCheckedWhen)
+import TodoList.Data as Data exposing (Todo)
 import ListControls
-import Utils exposing (onlyIf)
+import Utils exposing (onlyIf, mapIf)
 
 
 -- MODEL
@@ -69,7 +69,7 @@ update msg model =
             let
                 todoList =
                     model.todoList
-                        |> List.map (toggleCheckedWhen ((==) todo.id << .id))
+                        |> mapIf ((==) todo.id << .id) toggleCompleted
                         |> List.sortWith Data.compare
             in
                 { model | todoList = todoList }
@@ -102,6 +102,11 @@ update msg model =
         ClearAll ->
             { model | todoList = [] }
                 ! [ cache (encode []) ]
+
+
+toggleCompleted : Todo -> Todo
+toggleCompleted todo =
+    { todo | isCompleted = not todo.isCompleted }
 
 
 port cache : String -> Cmd msg

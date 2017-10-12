@@ -1,4 +1,4 @@
-module TodoList.Data exposing (Todo, compare, toggleCheckedWhen)
+module TodoList.Data exposing (Todo, compare)
 
 
 type alias Todo =
@@ -22,11 +22,3 @@ compare a b =
 
         ( False, True ) ->
             LT
-
-
-toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
-toggleCheckedWhen p todo =
-    if p todo then
-        { todo | isCompleted = not todo.isCompleted }
-    else
-        todo
