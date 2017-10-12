@@ -1,6 +1,6 @@
 module TodoList.Encode exposing (encode)
 
-import TodoList.Model exposing (Todo)
+import TodoList.Data exposing (Todo)
 import Json.Encode exposing (Value, object, list, string, bool, int)
 
 

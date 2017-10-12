@@ -6,8 +6,9 @@ import Html.Events exposing (onInput, onSubmit, onClick)
 import Json.Encode exposing (Value)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
-import TodoList.Model exposing (Todo)
+import TodoList.Data as Data exposing (Todo, toggleCheckedWhen)
 import ListControls
+import Utils exposing (onlyIf)
 
 
 -- MODEL
@@ -69,7 +70,7 @@ update msg model =
                 todoList =
                     model.todoList
                         |> List.map (toggleCheckedWhen ((==) todo.id << .id))
-                        |> List.sortWith compareTodos
+                        |> List.sortWith Data.compare
             in
                 { model | todoList = todoList }
                     ! [ cache (encode todoList) ]
@@ -101,30 +102,6 @@ update msg model =
         ClearAll ->
             { model | todoList = [] }
                 ! [ cache (encode []) ]
-
-
-toggleCheckedWhen : (Todo -> Bool) -> Todo -> Todo
-toggleCheckedWhen p todo =
-    if p todo then
-        { todo | isCompleted = not todo.isCompleted }
-    else
-        todo
-
-
-compareTodos : Todo -> Todo -> Order
-compareTodos a b =
-    case ( a.isCompleted, b.isCompleted ) of
-        ( True, True ) ->
-            EQ
-
-        ( False, False ) ->
-            EQ
-
-        ( True, False ) ->
-            GT
-
-        ( False, True ) ->
-            LT
 
 
 port cache : String -> Cmd msg
@@ -165,14 +142,6 @@ controls todoList =
             [ clearAll
             , clearCompleted
             ]
-
-
-onlyIf : Bool -> a -> Maybe a
-onlyIf pred x =
-    if pred then
-        Just x
-    else
-        Nothing
 
 
 draftTodo : String -> Html Msg

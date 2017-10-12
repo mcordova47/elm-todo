@@ -1,6 +1,6 @@
 module TodoList.Decode exposing (decode)
 
-import TodoList.Model exposing (Todo)
+import TodoList.Data exposing (Todo)
 import Json.Decode exposing (Decoder, Value, decodeString, decodeValue, list, string, bool, int)
 import Json.Decode.Pipeline as Pipeline exposing (required)
 
