@@ -1,10 +1,9 @@
 module TodoList.Decode exposing (decode)
 
 import TodoList.Data exposing (Todo)
-import Json.Decode exposing (Decoder, Value, decodeString, decodeValue, dict, string, bool, int)
+import Json.Decode exposing (Decoder, Value, decodeString, decodeValue, list, string, bool, int, at, map2)
 import Json.Decode.Pipeline as Pipeline exposing (required)
 import Dict exposing (Dict)
-import Utils
 
 
 decode : Value -> Result String (Dict Int Todo)
@@ -12,16 +11,23 @@ decode value =
     value
         |> decodeValue string
         |> Result.andThen fromJson
-        |> Result.andThen (Utils.mapKeysOrFail String.toInt)
+        |> Result.map Dict.fromList
 
 
-fromJson : String -> Result String (Dict String Todo)
+fromJson : String -> Result String (List ( Int, Todo ))
 fromJson =
-    decodeString (dict todoDecoder)
+    decodeString (list todoRow)
 
 
-todoDecoder : Decoder Todo
-todoDecoder =
+todo : Decoder Todo
+todo =
     Pipeline.decode Todo
         |> required "label" string
         |> required "isCompleted" bool
+
+
+todoRow : Decoder ( Int, Todo )
+todoRow =
+    Pipeline.decode (,)
+        |> required "0" int
+        |> required "1" todo
