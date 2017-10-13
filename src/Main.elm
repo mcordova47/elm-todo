@@ -9,6 +9,7 @@ import TodoList.Encode exposing (encode)
 import TodoList.Data as Data exposing (Todo)
 import ListControls
 import Utils exposing (onlyIf, mapIf)
+import Dict exposing (Dict)
 
 
 -- MODEL
@@ -16,7 +17,7 @@ import Utils exposing (onlyIf, mapIf)
 
 type alias Model =
     { draftTodo : String
-    , todoList : List Todo
+    , todoList : Dict Int Todo
     , todoNumber : Int
     }
 
@@ -24,7 +25,7 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { draftTodo = ""
-      , todoList = []
+      , todoList = Dict.empty
       , todoNumber = 0
       }
     , Cmd.none
@@ -38,7 +39,7 @@ init =
 type Msg
     = ChangeDraft String
     | AddTodo
-    | CompleteTodo Todo
+    | CompleteTodo Int
     | RetrieveCache Value
     | ClearCompleted
     | ClearAll
@@ -56,7 +57,10 @@ update msg model =
                     model.todoNumber + 1
 
                 todoList =
-                    (Todo model.draftTodo False todoNumber) :: model.todoList
+                    Dict.insert
+                        todoNumber
+                        (Todo model.draftTodo False)
+                        model.todoList
             in
                 { model
                     | todoList = todoList
@@ -65,12 +69,10 @@ update msg model =
                 }
                     ! [ cache (encode todoList) ]
 
-        CompleteTodo todo ->
+        CompleteTodo id ->
             let
                 todoList =
-                    model.todoList
-                        |> mapIf ((==) todo.id << .id) toggleCompleted
-                        |> List.sortWith Data.compare
+                    Dict.update id toggleCompleted model.todoList
             in
                 { model | todoList = todoList }
                     ! [ cache (encode todoList) ]
@@ -82,7 +84,7 @@ update msg model =
                         |> Result.withDefault []
 
                 todoNumber =
-                    List.maximum (List.map .id todoList)
+                    List.maximum (Dict.keys todoList)
                         |> Maybe.withDefault 0
             in
                 { model
@@ -104,9 +106,14 @@ update msg model =
                 ! [ cache (encode []) ]
 
 
-toggleCompleted : Todo -> Todo
-toggleCompleted todo =
-    { todo | isCompleted = not todo.isCompleted }
+toggleCompleted : Maybe Todo -> Maybe Todo
+toggleCompleted maybeTodo =
+    case maybeTodo of
+        Just todo ->
+            Just { todo | isCompleted = not todo.isCompleted }
+
+        Nothing ->
+            Nothing
 
 
 port cache : String -> Cmd msg
@@ -164,9 +171,9 @@ draftTodo val =
         ]
 
 
-todoList : List Todo -> Html Msg
+todoList : Dict Int Todo -> Html Msg
 todoList =
-    Html.div [] << List.map todoItem
+    Html.div [] << List.map todoItem << Dict.toList
 
 
 todoItem : Todo -> Html Msg

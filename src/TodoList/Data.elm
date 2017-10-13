@@ -4,7 +4,6 @@ module TodoList.Data exposing (Todo, compare)
 type alias Todo =
     { label : String
     , isCompleted : Bool
-    , id : Int
     }
 
 
