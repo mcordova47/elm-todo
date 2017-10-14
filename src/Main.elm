@@ -8,7 +8,7 @@ import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Data as Data exposing (Todo)
 import ListControls
-import Utils exposing (onlyIf, mapIf)
+import Utils exposing (onlyIf, mapIf, identityInsert)
 import Dict exposing (Dict)
 
 
@@ -18,18 +18,15 @@ import Dict exposing (Dict)
 type alias Model =
     { draftTodo : String
     , todoList : Dict Int Todo
-    , todoNumber : Int
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { draftTodo = ""
-      , todoList = Dict.empty
-      , todoNumber = 0
-      }
-    , Cmd.none
-    )
+    { draftTodo = ""
+    , todoList = Dict.empty
+    }
+        ! []
 
 
 
@@ -53,26 +50,28 @@ update msg model =
 
         AddTodo ->
             let
-                todoNumber =
-                    model.todoNumber + 1
+                newTodo =
+                    Todo model.draftTodo False
 
                 todoList =
-                    Dict.insert
-                        todoNumber
-                        (Todo model.draftTodo False)
-                        model.todoList
+                    identityInsert newTodo model.todoList
             in
                 { model
                     | todoList = todoList
                     , draftTodo = ""
-                    , todoNumber = todoNumber
                 }
                     ! [ cache (encode todoList) ]
 
         CompleteTodo id ->
             let
+                toggleCompleted todo =
+                    { todo | isCompleted = not todo.isCompleted }
+
                 todoList =
-                    Dict.update id toggleCompleted model.todoList
+                    Dict.update
+                        id
+                        (Maybe.map toggleCompleted)
+                        model.todoList
             in
                 { model | todoList = todoList }
                     ! [ cache (encode todoList) ]
@@ -81,39 +80,23 @@ update msg model =
             let
                 todoList =
                     decode value
-                        |> Result.withDefault []
-
-                todoNumber =
-                    List.maximum (Dict.keys todoList)
-                        |> Maybe.withDefault 0
+                        |> Result.withDefault Dict.empty
             in
-                { model
-                    | todoList = todoList
-                    , todoNumber = todoNumber
-                }
-                    ! []
+                { model | todoList = todoList } ! []
 
         ClearCompleted ->
             let
                 todoList =
-                    List.filter (not << .isCompleted) model.todoList
+                    Dict.filter
+                        (\_ todo -> not todo.isCompleted)
+                        model.todoList
             in
                 { model | todoList = todoList }
                     ! [ cache (encode todoList) ]
 
         ClearAll ->
-            { model | todoList = [] }
-                ! [ cache (encode []) ]
-
-
-toggleCompleted : Maybe Todo -> Maybe Todo
-toggleCompleted maybeTodo =
-    case maybeTodo of
-        Just todo ->
-            Just { todo | isCompleted = not todo.isCompleted }
-
-        Nothing ->
-            Nothing
+            { model | todoList = Dict.empty }
+                ! [ cache (encode Dict.empty) ]
 
 
 port cache : String -> Cmd msg
@@ -133,22 +116,24 @@ view model =
         ]
 
 
-controlPanel : List Todo -> Html Msg
+controlPanel : Dict Int Todo -> Html Msg
 controlPanel todoList =
     Html.div
         [ class "control-panel" ]
         (controls todoList)
 
 
-controls : List Todo -> List (Html Msg)
+controls : Dict Int Todo -> List (Html Msg)
 controls todoList =
     let
         clearAll =
             ListControls.deleteAll ClearAll
-                |> onlyIf (not (List.isEmpty todoList))
+                |> onlyIf (not (Dict.isEmpty todoList))
+
         clearCompleted =
             ListControls.delete ClearCompleted
-                |> onlyIf (List.any .isCompleted todoList)
+                |> onlyIf
+                    (List.any .isCompleted (Dict.values todoList))
     in
         List.filterMap identity
             [ clearAll
@@ -176,11 +161,11 @@ todoList =
     Html.div [] << List.map todoItem << Dict.toList
 
 
-todoItem : Todo -> Html Msg
-todoItem todo =
+todoItem : ( Int, Todo ) -> Html Msg
+todoItem ( id, todo ) =
     Html.div
         [ todoItemClass todo ]
-        [ ListControls.checkbox (CompleteTodo todo) todo.isCompleted
+        [ ListControls.checkbox (CompleteTodo id) todo.isCompleted
         , Html.div
             [ class "todo-item__label" ]
             [ Html.text todo.label ]

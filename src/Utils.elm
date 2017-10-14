@@ -1,4 +1,6 @@
-module Utils exposing (onlyIf, mapIf)
+module Utils exposing (onlyIf, mapIf, identityInsert)
+
+import Dict exposing (Dict)
 
 
 onlyIf : Bool -> a -> Maybe a
@@ -18,3 +20,14 @@ mapIf p fn xs =
             x
     in
         List.map mapFn xs
+
+
+identityInsert : a -> Dict Int a -> Dict Int a
+identityInsert value dict =
+    let
+        maxId =
+            List.maximum (Dict.keys dict)
+                |> Maybe.withDefault 0
+
+    in
+        Dict.insert (maxId + 1) value dict
