@@ -44,3 +44,11 @@ body, input, textarea, select, button {
   display: inline-block;
   cursor: pointer;
 }
+
+.alert-message {
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+  font-size: 14px;
+}

@@ -10,6 +10,9 @@ import TodoList.Data as Data exposing (Todo)
 import ListControls
 import Utils exposing (onlyIf, identityInsert, on)
 import Dict exposing (Dict)
+import Time
+import Task
+import Process
 
 
 -- MODEL
@@ -18,13 +21,28 @@ import Dict exposing (Dict)
 type alias Model =
     { draftTodo : String
     , todoList : Dict Int Todo
+    , alert : Maybe Alert
     }
+
+
+type alias Alert =
+    { message : String
+    , kind : AlertKind
+    }
+
+
+type AlertKind
+    = Success
+    | Info
+    | Warning
+    | Error
 
 
 init : ( Model, Cmd Msg )
 init =
     { draftTodo = ""
     , todoList = Dict.empty
+    , alert = Nothing
     }
         ! []
 
@@ -40,6 +58,8 @@ type Msg
     | RetrieveCache Value
     | ClearCompleted
     | ClearAll
+    | AddAlert Alert
+    | RemoveAlert
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -78,11 +98,23 @@ update msg model =
 
         RetrieveCache value ->
             let
-                todoList =
+                result =
                     decode value
+
+                todoList =
+                    result
                         |> Result.withDefault Dict.empty
+
+                alert =
+                    case result of
+                        Ok _ ->
+                            Nothing
+
+                        Err msg ->
+                            Just <| Alert msg Error
             in
-                { model | todoList = todoList } ! []
+                { model | todoList = todoList }
+                    ! [ addAlert alert ]
 
         ClearCompleted ->
             let
@@ -98,9 +130,32 @@ update msg model =
             { model | todoList = Dict.empty }
                 ! [ cache (encode Dict.empty) ]
 
+        AddAlert alert ->
+            { model | alert = Just alert }
+                ! [ removeAlert ]
+
+        RemoveAlert ->
+            { model | alert = Nothing } ! []
+
 
 port cache : String -> Cmd msg
 
+
+addAlert : Maybe Alert -> Cmd Msg
+addAlert maybeAlert =
+    case maybeAlert of
+        Just alert ->
+            Task.succeed alert
+                |> Task.perform AddAlert
+
+        Nothing ->
+            Cmd.none
+
+
+removeAlert : Cmd Msg
+removeAlert =
+    Process.sleep (2 * Time.second)
+        |> Task.perform (\_ -> RemoveAlert)
 
 
 -- VIEW
@@ -108,6 +163,19 @@ port cache : String -> Cmd msg
 
 view : Model -> Html Msg
 view model =
+    Html.div [] (viewList model)
+
+
+viewList : Model -> List (Html Msg)
+viewList model =
+    List.filterMap identity
+        [ Just (todoListContainer model)
+        , Maybe.map alertMessage model.alert
+        ]
+
+
+todoListContainer : Model -> Html Msg
+todoListContainer model =
     Html.div
         [ class "todo-list-container" ]
         [ draftTodo model.draftTodo
@@ -139,6 +207,13 @@ controls todoList =
             [ clearAll
             , clearCompleted
             ]
+
+
+alertMessage : Alert -> Html msg
+alertMessage alert =
+    Html.div
+        [ class "alert-message" ]
+        [ Html.text alert.message ]
 
 
 draftTodo : String -> Html Msg
