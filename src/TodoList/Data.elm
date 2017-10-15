@@ -1,4 +1,4 @@
-module TodoList.Data exposing (Todo, compare)
+module TodoList.Data exposing (Todo, compare, on)
 
 
 type alias Todo =
@@ -21,3 +21,8 @@ compare a b =
 
         ( False, True ) ->
             LT
+
+
+on : (a -> b) -> (b -> b -> c) -> a -> a -> c
+on mapFn fn x y =
+    fn (mapFn x) (mapFn y)

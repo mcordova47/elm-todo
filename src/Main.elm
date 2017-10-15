@@ -6,7 +6,7 @@ import Html.Events exposing (onInput, onSubmit, onClick)
 import Json.Encode exposing (Value)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
-import TodoList.Data as Data exposing (Todo)
+import TodoList.Data as Data exposing (Todo, on)
 import ListControls
 import Utils exposing (onlyIf, mapIf, identityInsert)
 import Dict exposing (Dict)
@@ -158,15 +158,11 @@ draftTodo val =
 
 todoList : Dict Int Todo -> Html Msg
 todoList todos =
-    let
-        compare ( _, a ) ( _, b ) =
-            Data.compare a b
-    in
-        todos
-            |> Dict.toList
-            |> List.sortWith compare
-            |> List.map todoItem
-            |> Html.div []
+    todos
+        |> Dict.toList
+        |> List.sortWith (Data.compare |> on Tuple.second)
+        |> List.map todoItem
+        |> Html.div []
 
 
 todoItem : ( Int, Todo ) -> Html Msg
