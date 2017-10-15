@@ -157,8 +157,16 @@ draftTodo val =
 
 
 todoList : Dict Int Todo -> Html Msg
-todoList =
-    Html.div [] << List.map todoItem << Dict.toList
+todoList todos =
+    let
+        compare ( _, a ) ( _, b ) =
+            Data.compare a b
+    in
+        todos
+            |> Dict.toList
+            |> List.sortWith compare
+            |> List.map todoItem
+            |> Html.div []
 
 
 todoItem : ( Int, Todo ) -> Html Msg
