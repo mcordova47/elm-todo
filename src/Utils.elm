@@ -1,4 +1,4 @@
-module Utils exposing (onlyIf, mapIf, identityInsert)
+module Utils exposing (onlyIf, identityInsert, on)
 
 import Dict exposing (Dict)
 
@@ -11,17 +11,6 @@ onlyIf pred x =
         Nothing
 
 
-mapIf : (a -> Bool) -> (a -> a) -> List a -> List a
-mapIf p fn xs =
-    let mapFn x =
-        if p x then
-            fn x
-        else
-            x
-    in
-        List.map mapFn xs
-
-
 identityInsert : a -> Dict Int a -> Dict Int a
 identityInsert value dict =
     let
@@ -31,3 +20,8 @@ identityInsert value dict =
 
     in
         Dict.insert (maxId + 1) value dict
+
+
+on : (a -> b) -> (b -> b -> c) -> a -> a -> c
+on mapFn fn x y =
+    fn (mapFn x) (mapFn y)

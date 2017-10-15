@@ -6,9 +6,9 @@ import Html.Events exposing (onInput, onSubmit, onClick)
 import Json.Encode exposing (Value)
 import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
-import TodoList.Data as Data exposing (Todo, on)
+import TodoList.Data as Data exposing (Todo)
 import ListControls
-import Utils exposing (onlyIf, mapIf, identityInsert)
+import Utils exposing (onlyIf, identityInsert, on)
 import Dict exposing (Dict)
 
 
