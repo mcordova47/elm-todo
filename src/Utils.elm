@@ -1,6 +1,7 @@
-module Utils exposing (onlyIf, identityInsert, on)
+module Utils exposing (onlyIf, htmlIf, identityInsert, on)
 
 import Dict exposing (Dict)
+import Html exposing (Html)
 
 
 onlyIf : Bool -> a -> Maybe a
@@ -9,6 +10,14 @@ onlyIf pred x =
         Just x
     else
         Nothing
+
+
+htmlIf : Bool -> Html msg -> Html msg
+htmlIf pred html =
+    if pred then
+        html
+    else
+        Html.text ""
 
 
 identityInsert : a -> Dict Int a -> Dict Int a

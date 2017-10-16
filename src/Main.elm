@@ -8,7 +8,7 @@ import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Data as Data exposing (Todo)
 import ListControls
-import Utils exposing (onlyIf, identityInsert, on)
+import Utils exposing (htmlIf, identityInsert, on)
 import Dict exposing (Dict)
 import Time
 import Task
@@ -163,14 +163,9 @@ removeAlert =
 
 view : Model -> Html Msg
 view model =
-    Html.div [] (viewList model)
-
-
-viewList : Model -> List (Html Msg)
-viewList model =
-    List.filterMap identity
-        [ Just (todoListContainer model)
-        , Maybe.map alertMessage model.alert
+    Html.div []
+        [ todoListContainer model
+        , alertMessage model.alert
         ]
 
 
@@ -196,24 +191,28 @@ controls todoList =
     let
         clearAll =
             ListControls.deleteAll ClearAll
-                |> onlyIf (not (Dict.isEmpty todoList))
+                |> htmlIf (not (Dict.isEmpty todoList))
 
         clearCompleted =
             ListControls.delete ClearCompleted
-                |> onlyIf
+                |> htmlIf
                     (List.any .isCompleted (Dict.values todoList))
     in
-        List.filterMap identity
-            [ clearAll
-            , clearCompleted
-            ]
+        [ clearAll
+        , clearCompleted
+        ]
 
 
-alertMessage : Alert -> Html msg
-alertMessage alert =
-    Html.div
-        [ class "alert-message" ]
-        [ Html.text alert.message ]
+alertMessage : Maybe Alert -> Html msg
+alertMessage maybeAlert =
+    case maybeAlert of
+        Just alert ->
+            Html.div
+                [ class "alert-message" ]
+                [ Html.text alert.message ]
+
+        Nothing ->
+            Html.text ""
 
 
 draftTodo : String -> Html Msg
