@@ -183,24 +183,22 @@ controlPanel : Dict Int Todo -> Html Msg
 controlPanel todoList =
     Html.div
         [ class "control-panel" ]
-        (controls todoList)
-
-
-controls : Dict Int Todo -> List (Html Msg)
-controls todoList =
-    let
-        clearAll =
-            ListControls.deleteAll ClearAll
-                |> htmlIf (not (Dict.isEmpty todoList))
-
-        clearCompleted =
-            ListControls.delete ClearCompleted
-                |> htmlIf
-                    (List.any .isCompleted (Dict.values todoList))
-    in
-        [ clearAll
-        , clearCompleted
+        [ clearAll todoList
+        , clearCompleted todoList
         ]
+
+
+clearAll : Dict Int Todo -> Html Msg
+clearAll todoList =
+    ListControls.deleteAll ClearAll
+        |> htmlIf (not (Dict.isEmpty todoList))
+
+
+clearCompleted : Dict Int Todo -> Html Msg
+clearCompleted todoList =
+    ListControls.delete ClearCompleted
+        |> htmlIf
+            (List.any .isCompleted (Dict.values todoList))
 
 
 alertMessage : Maybe Alert -> Html msg
