@@ -154,7 +154,7 @@ addAlert maybeAlert =
 
 removeAlert : Cmd Msg
 removeAlert =
-    Process.sleep (2 * Time.second)
+    Process.sleep (3 * Time.second)
         |> Task.perform (\_ -> RemoveAlert)
 
 
@@ -203,14 +203,19 @@ clearCompleted todoList =
 
 alertMessage : Maybe Alert -> Html msg
 alertMessage maybeAlert =
-    case maybeAlert of
-        Just alert ->
-            Html.div
-                [ class "alert-message" ]
-                [ Html.text alert.message ]
-
-        Nothing ->
-            Html.text ""
+    let
+        message =
+            maybeAlert
+                |> Maybe.map .message
+                |> Maybe.withDefault ""
+    in
+        Html.div
+            [ classList
+                [ ( "alert-message", True )
+                , ( "alert-message--hidden", message == "" )
+                ]
+            ]
+            [ Html.text message ]
 
 
 draftTodo : String -> Html Msg
