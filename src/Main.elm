@@ -8,7 +8,7 @@ import TodoList.Decode exposing (decode)
 import TodoList.Encode exposing (encode)
 import TodoList.Data as Data exposing (Todo)
 import ListControls
-import Utils exposing (htmlIf, identityInsert, on)
+import Utils exposing (renderIf, identityInsert, on)
 import Dict exposing (Dict)
 import Time
 import Task
@@ -191,11 +191,11 @@ controls todoList =
     let
         clearAll =
             ListControls.deleteAll ClearAll
-                |> htmlIf (not (Dict.isEmpty todoList))
+                |> renderIf (not (Dict.isEmpty todoList))
 
         clearCompleted =
             ListControls.delete ClearCompleted
-                |> htmlIf
+                |> renderIf
                     (List.any .isCompleted (Dict.values todoList))
     in
         [ clearAll

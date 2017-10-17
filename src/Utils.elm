@@ -1,4 +1,4 @@
-module Utils exposing (onlyIf, htmlIf, identityInsert, on)
+module Utils exposing (onlyIf, renderIf, identityInsert, on)
 
 import Dict exposing (Dict)
 import Html exposing (Html)
@@ -12,8 +12,8 @@ onlyIf pred x =
         Nothing
 
 
-htmlIf : Bool -> Html msg -> Html msg
-htmlIf pred html =
+renderIf : Bool -> Html msg -> Html msg
+renderIf pred html =
     if pred then
         html
     else
