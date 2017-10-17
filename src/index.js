@@ -13,4 +13,4 @@ app.ports.cache.subscribe(todoList => {
   localStorage.setItem(cacheKey, todoList)
 })
 
-app.ports.retrieve.send(localStorage.getItem(cacheKey))
+app.ports.retrieve.send(localStorage.getItem(cacheKey) || '[]')
