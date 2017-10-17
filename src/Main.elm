@@ -10,9 +10,7 @@ import TodoList.Data as Data exposing (Todo)
 import ListControls
 import Utils exposing (renderIf, identityInsert, on)
 import Dict exposing (Dict)
-import Time
-import Task
-import Process
+import Alert exposing (Alert)
 
 
 -- MODEL
@@ -21,28 +19,15 @@ import Process
 type alias Model =
     { draftTodo : String
     , todoList : Dict Int Todo
-    , alert : Maybe Alert
+    , alert : Alert.Model
     }
-
-
-type alias Alert =
-    { message : String
-    , kind : AlertKind
-    }
-
-
-type AlertKind
-    = Success
-    | Info
-    | Warning
-    | Error
 
 
 init : ( Model, Cmd Msg )
 init =
     { draftTodo = ""
     , todoList = Dict.empty
-    , alert = Nothing
+    , alert = Alert.init
     }
         ! []
 
@@ -58,8 +43,7 @@ type Msg
     | RetrieveCache Value
     | ClearCompleted
     | ClearAll
-    | AddAlert Alert
-    | RemoveAlert
+    | AlertMsg Alert.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -111,10 +95,10 @@ update msg model =
                             Nothing
 
                         Err msg ->
-                            Just <| Alert msg Error
+                            Just (Alert msg)
             in
                 { model | todoList = todoList }
-                    ! [ addAlert alert ]
+                    ! [ Cmd.map AlertMsg (Alert.add alert) ]
 
         ClearCompleted ->
             let
@@ -130,32 +114,17 @@ update msg model =
             { model | todoList = Dict.empty }
                 ! [ cache (encode Dict.empty) ]
 
-        AddAlert alert ->
-            { model | alert = Just alert }
-                ! [ removeAlert ]
-
-        RemoveAlert ->
-            { model | alert = Nothing } ! []
+        AlertMsg alertMsg ->
+            let
+                ( alert, cmd ) =
+                    Alert.update alertMsg model.alert
+            in
+                { model | alert = alert }
+                    ! [ Cmd.map AlertMsg cmd ]
 
 
 port cache : String -> Cmd msg
 
-
-addAlert : Maybe Alert -> Cmd Msg
-addAlert maybeAlert =
-    case maybeAlert of
-        Just alert ->
-            Task.succeed alert
-                |> Task.perform AddAlert
-
-        Nothing ->
-            Cmd.none
-
-
-removeAlert : Cmd Msg
-removeAlert =
-    Process.sleep (3 * Time.second)
-        |> Task.perform (\_ -> RemoveAlert)
 
 
 -- VIEW
@@ -165,7 +134,8 @@ view : Model -> Html Msg
 view model =
     Html.div []
         [ todoListContainer model
-        , alertMessage model.alert
+        , Html.map AlertMsg
+            (Alert.view model.alert)
         ]
 
 
@@ -199,23 +169,6 @@ clearCompleted todoList =
     ListControls.delete ClearCompleted
         |> renderIf
             (List.any .isCompleted (Dict.values todoList))
-
-
-alertMessage : Maybe Alert -> Html msg
-alertMessage maybeAlert =
-    let
-        message =
-            maybeAlert
-                |> Maybe.map .message
-                |> Maybe.withDefault ""
-    in
-        Html.div
-            [ classList
-                [ ( "alert-message", True )
-                , ( "alert-message--hidden", message == "" )
-                ]
-            ]
-            [ Html.text message ]
 
 
 draftTodo : String -> Html Msg
