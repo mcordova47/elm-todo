@@ -84,18 +84,15 @@ update msg model =
             let
                 result =
                     decode value
+                        |> Result.mapError
+                            (\_ -> "We weren't able to retrieve your saved todos")
 
                 todoList =
                     result
                         |> Result.withDefault Dict.empty
 
                 alert =
-                    case result of
-                        Ok _ ->
-                            Alert.empty
-
-                        Err msg ->
-                            Alert.singleton msg
+                    Alert.fromError result
             in
                 { model | todoList = todoList }
                     ! [ Cmd.map AlertMsg (Alert.add alert) ]

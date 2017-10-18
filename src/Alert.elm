@@ -4,6 +4,7 @@ module Alert exposing
     , Msg
     , empty
     , singleton
+    , fromError
     , update
     , view
     , remove
@@ -36,6 +37,16 @@ empty =
 singleton : String -> Model
 singleton =
     Just << Alert
+
+
+fromError : Result String a -> Model
+fromError result =
+    case result of
+        Ok _ ->
+            empty
+
+        Err msg ->
+            singleton msg
 
 
 
