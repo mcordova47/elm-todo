@@ -134,8 +134,7 @@ view : Model -> Html Msg
 view model =
     Html.div []
         [ todoListContainer model
-        , Html.map AlertMsg
-            (Alert.view model.alert)
+        , Alert.view model.alert
         ]
 
 

@@ -79,7 +79,7 @@ remove =
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> Html msg
 view model =
     let
         message =
