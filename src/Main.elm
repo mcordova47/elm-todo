@@ -10,7 +10,7 @@ import TodoList.Data as Data exposing (Todo)
 import ListControls
 import Utils exposing (renderIf, identityInsert, on)
 import Dict exposing (Dict)
-import Alert exposing (Alert)
+import Alert
 
 
 -- MODEL
@@ -27,7 +27,7 @@ init : ( Model, Cmd Msg )
 init =
     { draftTodo = ""
     , todoList = Dict.empty
-    , alert = Alert.init
+    , alert = Alert.empty
     }
         ! []
 
@@ -92,10 +92,10 @@ update msg model =
                 alert =
                     case result of
                         Ok _ ->
-                            Nothing
+                            Alert.empty
 
                         Err msg ->
-                            Just (Alert msg)
+                            Alert.singleton msg
             in
                 { model | todoList = todoList }
                     ! [ Cmd.map AlertMsg (Alert.add alert) ]

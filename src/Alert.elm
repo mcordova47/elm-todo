@@ -2,7 +2,8 @@ module Alert exposing
     ( Model
     , Alert
     , Msg
-    , init
+    , empty
+    , singleton
     , update
     , view
     , remove
@@ -27,9 +28,14 @@ type alias Alert =
     { message : String }
 
 
-init : Model
-init =
+empty : Model
+empty =
     Nothing
+
+
+singleton : String -> Model
+singleton =
+    Just << Alert
 
 
 
