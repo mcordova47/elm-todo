@@ -76,6 +76,7 @@ update msg model =
                 Just _ ->
                     { model | pending = model.pending ++ [ alert ] }
                         ! []
+
                 Nothing ->
                     { model | current = Just alert }
                         ! [ remove ]
@@ -83,7 +84,8 @@ update msg model =
         RemoveAlert ->
             case model.pending of
                 alert :: rest ->
-                    Model (Just alert) rest ! [ remove ]
+                    Model Nothing rest
+                        ! [ add (Just alert) ]
 
                 [] ->
                     init ! []
@@ -93,8 +95,8 @@ add : Maybe Alert -> Cmd Msg
 add maybeAlert =
     case maybeAlert of
         Just alert ->
-            Task.succeed alert
-                |> Task.perform AddAlert
+            Process.sleep (0.3 * Time.second)
+                |> Task.perform (\_ -> AddAlert alert)
 
         Nothing ->
             Cmd.none
