@@ -2,6 +2,7 @@ module Alert exposing
     ( Model
     , Alert
     , Msg
+    , init
     , empty
     , singleton
     , fromError
@@ -22,24 +23,33 @@ import Html.Attributes exposing (classList)
 
 
 type alias Model =
-    Maybe Alert
+    { current : Maybe Alert
+    , pending : List Alert
+    }
 
 
 type alias Alert =
     { message : String }
 
 
-empty : Model
+init : Model
+init =
+    { current = Nothing
+    , pending = []
+    }
+
+
+empty : Maybe Alert
 empty =
     Nothing
 
 
-singleton : String -> Model
+singleton : String -> Maybe Alert
 singleton =
     Just << Alert
 
 
-fromError : Result String a -> Model
+fromError : Result String a -> Maybe Alert
 fromError result =
     case result of
         Ok _ ->
@@ -62,16 +72,26 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         AddAlert alert ->
-            Just alert
-                ! [ remove ]
+            case model.current of
+                Just _ ->
+                    { model | pending = model.pending ++ [ alert ] }
+                        ! []
+                Nothing ->
+                    { model | current = Just alert }
+                        ! [ remove ]
 
         RemoveAlert ->
-            Nothing ! []
+            case model.pending of
+                alert :: rest ->
+                    Model (Just alert) rest ! [ remove ]
+
+                [] ->
+                    init ! []
 
 
-add : Model -> Cmd Msg
-add model =
-    case model of
+add : Maybe Alert -> Cmd Msg
+add maybeAlert =
+    case maybeAlert of
         Just alert ->
             Task.succeed alert
                 |> Task.perform AddAlert
@@ -94,7 +114,7 @@ view : Model -> Html msg
 view model =
     let
         message =
-            model
+            model.current
                 |> Maybe.map .message
                 |> Maybe.withDefault ""
     in

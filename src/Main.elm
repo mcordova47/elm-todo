@@ -27,7 +27,7 @@ init : ( Model, Cmd Msg )
 init =
     { draftTodo = ""
     , todoList = Dict.empty
-    , alert = Alert.empty
+    , alert = Alert.init
     }
         ! []
 
